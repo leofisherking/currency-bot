@@ -1,0 +1,13 @@
+services:
+  currency-bot:
+    container_name: currency-bot
+    image: currency-bot
+    pull_policy: never
+    build:
+      context: .
+      dockerfile: Dockerfile
+    #    env_file:
+    #      - env/app.env
+    ports:
+      - "9000:8000"
+

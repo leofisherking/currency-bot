@@ -1,0 +1,65 @@
+import asyncio
+from contextlib import asynccontextmanager
+from typing import Any, AsyncIterator
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from currency_bot.bot import bot, dispatcher
+from currency_bot.core.providers.setup import app_container
+from currency_bot.core.settings import settings
+from currency_bot.services.binance_listener import BinanceListener
+
+
+async def polling_loop():
+    while True:
+        try:
+            await dispatcher.start_polling(bot, skip_updates=True)
+        except Exception:
+            await asyncio.sleep(5)
+
+
+@asynccontextmanager
+async def lifespan_app(app: FastAPI) -> AsyncIterator[Any]:
+    binance_listener = await app_container.get(BinanceListener)
+    await binance_listener.start()
+    polling_task = asyncio.create_task(dispatcher.start_polling(bot, skip_updates=True))
+
+    await bot.delete_webhook(drop_pending_updates=True)
+    # await bot.set_webhook(url=settings.webhook_url)
+
+    yield
+
+    await binance_listener.stop()
+
+    polling_task.cancel()
+    try:
+        await polling_task
+    except asyncio.CancelledError:
+        pass
+
+    # await bot.delete_webhook(drop_pending_updates=True)
+    await bot.session.close()
+
+
+def create_app() -> FastAPI:
+    app_options = {
+        "docs_url": None,
+        "redoc_url": None,
+        "openapi_url": None,
+    }
+
+    app = FastAPI(
+        title="Currency Bot Webhook",
+        **app_options,
+        lifespan=lifespan_app,
+    )
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_methods=["*"],
+        allow_headers=["*"],
+        allow_credentials=True,
+    )
+
+    return app
