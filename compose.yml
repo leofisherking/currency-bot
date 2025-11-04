@@ -1,0 +1,19 @@
+name: currency-bot
+
+services:
+  currency-bot:
+    container_name: currency-bot
+    image: currency-bot
+    pull_policy: never
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - env/app.env
+    ports:
+      - "8010:8000"
+    volumes:
+      - sqlite_data:/app/sqlite_data
+
+volumes:
+  sqlite_data:
