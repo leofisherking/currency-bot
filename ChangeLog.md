@@ -1,3 +1,5 @@
+### 0.1.2 (2025-11-06)
+- Bot method changed to webhook
 ### 0.1.1 (2025-11-05)
 - Settings cleaned
 - Github Actions setup
