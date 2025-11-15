@@ -9,19 +9,10 @@ from currency_bot.core.settings import settings
 from currency_bot.services.binance_listener import BinanceListener
 
 
-# async def polling_loop():
-#     while True:
-#         try:
-#             await dispatcher.start_polling(bot, skip_updates=True)
-#         except Exception:
-#             await asyncio.sleep(5)
-
-
 @asynccontextmanager
 async def lifespan_app(app: FastAPI) -> AsyncIterator[Any]:
     binance_listener = await app_container.get(BinanceListener)
     await binance_listener.start()
-    # polling_task = asyncio.create_task(dispatcher.start_polling(bot, skip_updates=True))
 
     await bot.delete_webhook(drop_pending_updates=True)
     await bot.set_webhook(url=settings.webhook_url)
@@ -29,12 +20,6 @@ async def lifespan_app(app: FastAPI) -> AsyncIterator[Any]:
     yield
 
     await binance_listener.stop()
-
-    # polling_task.cancel()
-    # try:
-    #     await polling_task
-    # except asyncio.CancelledError:
-    #     pass
 
     await bot.delete_webhook(drop_pending_updates=True)
     await bot.session.close()

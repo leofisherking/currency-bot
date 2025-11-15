@@ -3,7 +3,7 @@ import json
 from datetime import datetime, timezone
 
 import websockets
-from tenacity import retry_if_exception_type, stop_never, wait_exponential, retry
+from tenacity import stop_never, wait_exponential, retry
 
 from currency_bot.services.abc.i_listener import BaseListener
 
@@ -30,8 +30,6 @@ class BinanceListener(BaseListener):
     @retry(
         stop=stop_never,
         wait=wait_exponential(multiplier=1, max=60),
-        retry=retry_if_exception_type(websockets.ConnectionClosed),
-        reraise=False,
     )
     async def _listen(self) -> None:
         async with websockets.connect(self._url) as ws:
@@ -50,9 +48,12 @@ class BinanceListener(BaseListener):
         if isinstance(msg, bytes):
             msg = msg.decode("utf-8")
         serialized = json.loads(msg)
+
+        update_date = datetime.fromtimestamp(
+            serialized.get("E") / 1000, tz=timezone.utc
+        )
+
         return {
             "price": serialized.get("c"),
-            "price_time": datetime.fromtimestamp(
-                serialized.get("E") / 1000, tz=timezone.utc
-            ).isoformat(),
+            "price_time": datetime.strftime(update_date, "%Y-%m-%d %H:%M:%S"),
         }
