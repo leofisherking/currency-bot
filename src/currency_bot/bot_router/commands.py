@@ -1,5 +1,5 @@
 from aiogram import Router
-from aiogram.filters import CommandStart
+from aiogram.filters import Command, CommandStart
 from aiogram.types import Message
 from dishka import FromDishka
 from dishka.integrations.aiogram import inject
@@ -10,7 +10,7 @@ from currency_bot.domain.use_cases.get_current_rates import GetCurrentRates
 router = Router()
 
 
-@router.message(CommandStart())
+@router.message(Command("rates"))
 @inject
 async def start_handler(
     message: Message,

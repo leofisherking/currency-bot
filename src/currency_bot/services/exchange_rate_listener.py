@@ -14,6 +14,7 @@ class ExchangeRateListener(BaseListener):
         "target_code",
         "conversion_rate",
         "next_update",
+        "last_update",
     }
 
     def __init__(self, url: str, api_key: str) -> None:
@@ -42,6 +43,14 @@ class ExchangeRateListener(BaseListener):
             serialized.get("time_next_update_unix"),
             tz=timezone.utc,
         )
+
+        last_update = datetime.fromtimestamp(
+            serialized.get("time_last_update_unix"),
+            tz=timezone.utc,
+        )
+
+        serialized["last_update"] = datetime.strftime(last_update, "%Y-%m-%d %H:%M:%S")
+
         self._cached_rate = {
             k: v for k, v in serialized.items() if k in self._RESPONSE_KEYS
         }
